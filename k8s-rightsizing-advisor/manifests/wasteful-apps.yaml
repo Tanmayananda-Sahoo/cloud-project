@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rightsizing-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-1
+  namespace: rightsizing-demo
+  labels:
+    app: app-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-1
+  template:
+    metadata:
+      labels:
+        app: app-1
+    spec:
+      containers:
+        - name: stress
+          image: alexeiled/stress-ng
+          args:
+            - "--cpu"
+            - "1"
+            - "--cpu-load"
+            - "10"
+            - "--vm"
+            - "1"
+            - "--vm-bytes"
+            - "50M"
+            - "--vm-keep"
+            - "--vm-hang"
+            - "3600"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-2
+  namespace: rightsizing-demo
+  labels:
+    app: app-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-2
+  template:
+    metadata:
+      labels:
+        app: app-2
+    spec:
+      containers:
+        - name: stress
+          image: alexeiled/stress-ng
+          args:
+            - "--cpu"
+            - "1"
+            - "--cpu-load"
+            - "15"
+            - "--vm"
+            - "1"
+            - "--vm-bytes"
+            - "80M"
+            - "--vm-keep"
+            - "--vm-hang"
+            - "3600"
+          resources:
+            requests:
+              cpu: "400m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "256Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-3
+  namespace: rightsizing-demo
+  labels:
+    app: app-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-3
+  template:
+    metadata:
+      labels:
+        app: app-3
+    spec:
+      containers:
+        - name: stress
+          image: alexeiled/stress-ng
+          args:
+            - "--cpu"
+            - "1"
+            - "--cpu-load"
+            - "5"
+            - "--vm"
+            - "1"
+            - "--vm-bytes"
+            - "25M"
+            - "--vm-keep"
+            - "--vm-hang"
+            - "3600"
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "128Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-4
+  namespace: rightsizing-demo
+  labels:
+    app: app-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-4
+  template:
+    metadata:
+      labels:
+        app: app-4
+    spec:
+      containers:
+        - name: stress
+          image: alexeiled/stress-ng
+          args:
+            - "--cpu"
+            - "1"
+            - "--cpu-load"
+            - "20"
+            - "--vm"
+            - "1"
+            - "--vm-bytes"
+            - "100M"
+            - "--vm-keep"
+            - "--vm-hang"
+            - "3600"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"

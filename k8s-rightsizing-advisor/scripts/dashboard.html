@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RightSize — Resource Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1419;
+    --panel: #161B22;
+    --panel-raised: #1B222C;
+    --line: #262D38;
+    --text: #E6E8EB;
+    --muted: #8B93A1;
+    --used: #3FB88F;
+    --waste: #E8A33D;
+    --waste-strong: #E5484D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 28px 80px; }
+
+  .topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 40px;
+  }
+  .topline .name { font-weight: 600; font-size: 16px; letter-spacing: 0.2px; }
+  .topline .meta { color: var(--muted); font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
+
+  .hero { margin-bottom: 44px; }
+  .hero .figure {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--waste);
+    letter-spacing: -1px;
+  }
+  .hero .caption { margin-top: 10px; color: var(--muted); max-width: 480px; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; margin-right: 20px; }
+  .swatch { width: 10px; height: 10px; display: inline-block; }
+  .swatch.used { background: var(--used); }
+  .swatch.waste { background: var(--waste); }
+
+  .section-title {
+    font-size: 13px;
+    text-transform: none;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+
+  .ledger {
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 190px 1fr 70px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-row .label { font-size: 13.5px; }
+  .ledger-row .label .pod { color: var(--text); }
+  .ledger-row .label .res { color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  .bar-track {
+    position: relative;
+    height: 18px;
+    background: var(--panel-raised);
+    overflow: hidden;
+  }
+  .bar-used { position: absolute; top: 0; left: 0; height: 100%; background: var(--used); }
+  .bar-waste { position: absolute; top: 0; height: 100%; background: var(--waste); }
+  .bar-waste.negative { background: var(--waste-strong); }
+  .ledger-row .pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    text-align: right;
+    color: var(--muted);
+  }
+  .ledger-row .pct.high { color: var(--waste); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 40px;
+    font-size: 13.5px;
+  }
+  thead th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 10px;
+  }
+  thead th.num, td.num { text-align: right; font-family: 'IBM Plex Mono', monospace; }
+  tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text);
+  }
+  tbody td.pod-cell { font-family: 'IBM Plex Sans', sans-serif; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .empty {
+    color: var(--muted);
+    padding: 40px 0;
+    font-size: 14px;
+  }
+  .empty code {
+    background: var(--panel-raised);
+    padding: 2px 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+
+  @media (max-width: 640px) {
+    .ledger-row { grid-template-columns: 130px 1fr 50px; gap: 10px; }
+    .hero .figure { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topline">
+    <div class="name">RightSize</div>
+    <div class="meta" id="meta">loading\u2026</div>
+  </div>
+
+  <div id="content">
+    <div class="empty">Loading <code>rightsizing_report.json</code>\u2026</div>
+  </div>
+
+</div>
+
+<script>
+async function load() {
+  const contentEl = document.getElementById('content');
+  const metaEl = document.getElementById('meta');
+  let data;
+  try {
+    const res = await fetch('rightsizing_report.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (err) {
+    metaEl.textContent = 'no data';
+    contentEl.innerHTML = '<div class="empty">Could not load <code>rightsizing_report.json</code>. ' +
+      'Run <code>python3 main.py</code> from the scripts folder first, then reload this page.</div>';
+    return;
+  }
+
+  const genTime = new Date(data.generated_at);
+  metaEl.textContent = data.namespace + ' \u00b7 generated ' + genTime.toLocaleString();
+
+  const rows = data.rows || [];
+  if (rows.length === 0) {
+    contentEl.innerHTML = '<div class="empty">Report has no rows yet.</div>';
+    return;
+  }
+
+  let html = '';
+
+  html += '<div class="hero">';
+  html += '<div class="figure">$' + data.total_wasted_monthly_usd.toFixed(2) + '</div>';
+  html += '<div class="caption">Estimated wasted spend per month, across ' +
+          new Set(rows.map(r => r.pod)).size + ' pods in <strong>' + data.namespace +
+          '</strong>, based on the 90th-percentile usage of each pod\'s recent history.</div>';
+  html += '</div>';
+
+  html += '<div class="legend">' +
+          '<span><span class="swatch used"></span>recommended (actually needed)</span>' +
+          '<span><span class="swatch waste"></span>wasted (requested but unused)</span>' +
+          '</div>';
+
+  html += '<div class="section-title">Resource ledger — requested vs. needed, per pod</div>';
+  html += '<div class="ledger">';
+  rows.forEach(r => {
+    const waste = r.waste_pct;
+    const usedPct = Math.max(0, Math.min(100, 100 - waste));
+    const wastePct = Math.max(0, Math.min(100, waste));
+    const isNegative = waste < 0;
+    const unit = r.resource === 'cpu' ? 'm' : 'Mi';
+
+    html += '<div class="ledger-row">';
+    html += '  <div class="label"><div class="pod">' + shortPod(r.pod) + '</div>' +
+            '<div class="res">' + r.resource + ' \u00b7 ' + r.requested.toFixed(0) + unit + ' requested</div></div>';
+    html += '  <div class="bar-track">';
+    if (isNegative) {
+      html += '<div class="bar-used" style="width:100%"></div>';
+    } else {
+      html += '<div class="bar-used" style="width:' + usedPct + '%"></div>';
+      html += '<div class="bar-waste' + (isNegative ? ' negative' : '') + '" style="left:' + usedPct + '%; width:' + wastePct + '%"></div>';
+    }
+    html += '  </div>';
+    html += '  <div class="pct' + (waste > 60 ? ' high' : '') + '">' + waste.toFixed(1) + '%</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<table><thead><tr>' +
+          '<th>Pod</th><th>Resource</th>' +
+          '<th class="num">Requested</th><th class="num">p90 Actual</th><th class="num">Recommended</th>' +
+          '<th class="num">Waste %</th><th class="num">Wasted $/mo</th>' +
+          '</tr></thead><tbody>';
+  rows.forEach(r => {
+    const unit = r.resource === 'cpu' ? 'm' : 'Mi';
+    html += '<tr>' +
+      '<td class="pod-cell">' + shortPod(r.pod) + '</td>' +
+      '<td>' + r.resource + '</td>' +
+      '<td class="num">' + r.requested.toFixed(1) + unit + '</td>' +
+      '<td class="num">' + r.p90_actual.toFixed(2) + '</td>' +
+      '<td class="num">' + r.recommended.toFixed(2) + '</td>' +
+      '<td class="num">' + r.waste_pct.toFixed(1) + '%</td>' +
+      '<td class="num">$' + r.wasted_cost_usd.toFixed(2) + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+
+  contentEl.innerHTML = html;
+}
+
+function shortPod(fullName) {
+  // Collapse "app-1-79447bc758-h9cvw" down to "app-1" for readability,
+  // since the ReplicaSet hash/suffix isn't meaningful to a viewer here.
+  const m = fullName.match(/^(app-\d+)/);
+  return m ? m[1] : fullName;
+}
+
+load();
+</script>
+</body>
+</html>

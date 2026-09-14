@@ -1,0 +1,231 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus.monitoring.svc.cluster.local:9090
+        isDefault: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: monitoring
+data:
+  provider.yaml: |
+    apiVersion: 1
+    providers:
+      - name: RightSize
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-json
+  namespace: monitoring
+data:
+  rightsize-dashboard.json: |
+    {
+      "title": "RightSize - Kubernetes Resource Right-Sizing",
+      "uid": "rightsize-dashboard",
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-30m", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "CPU: Requested vs Actual (millicores)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+          "targets": [
+            {
+              "expr": "kube_pod_container_resource_requests{namespace=\"rightsizing-demo\", resource=\"cpu\", container=\"stress\"} * 1000",
+              "legendFormat": "{{pod}} - requested",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(container_cpu_usage_seconds_total{namespace=\"rightsizing-demo\", container=\"stress\"}[2m]) * 1000",
+              "legendFormat": "{{pod}} - actual",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Memory: Requested vs Actual (Mi)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+          "targets": [
+            {
+              "expr": "kube_pod_container_resource_requests{namespace=\"rightsizing-demo\", resource=\"memory\", container=\"stress\"} / (1024*1024)",
+              "legendFormat": "{{pod}} - requested",
+              "refId": "A"
+            },
+            {
+              "expr": "container_memory_working_set_bytes{namespace=\"rightsizing-demo\", container=\"stress\"} / (1024*1024)",
+              "legendFormat": "{{pod}} - actual",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Waste % per Pod / Resource (from main.py)",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": -20,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 40 },
+                  { "color": "red", "value": 70 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rightsize_waste_pct",
+              "legendFormat": "{{pod}} - {{resource}}",
+              "refId": "A",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Total Estimated Monthly Waste ($)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 20 },
+                  { "color": "red", "value": 50 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            { "expr": "sum(rightsize_wasted_cost_usd)", "refId": "A", "instant": true }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Recommended Values (from main.py)",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+          "targets": [
+            {
+              "expr": "rightsize_recommended",
+              "legendFormat": "{{pod}} - {{resource}}",
+              "refId": "A",
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.1.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-json
+              mountPath: /var/lib/grafana/dashboards
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "150Mi"
+            limits:
+              cpu: "300m"
+              memory: "300Mi"
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboard-json
+          configMap:
+            name: grafana-dashboard-json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

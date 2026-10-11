@@ -19,6 +19,7 @@ import requests
 from prometheus_client import PrometheusClient
 from recommender import build_report_row
 from cost_estimator import add_cost_columns
+from cloudwatch_publisher import publish_to_cloudwatch, NAMESPACE as CLOUDWATCH_NAMESPACE
 
 NAMESPACE = "rightsizing-demo"
 CONTAINER = "stress"
@@ -187,6 +188,17 @@ def main():
     except requests.exceptions.RequestException as e:
         print(f"\nWARNING: could not push metrics to Pushgateway ({e}).")
         print("Is 'kubectl port-forward -n monitoring svc/pushgateway 9091:9091' running?")
+
+    # Cloud-side monitoring: publish the same results to Amazon CloudWatch.
+    # Failure here never stops the local pipeline (CSV, JSON, Pushgateway are already done).
+    try:
+        sent = publish_to_cloudwatch(df)
+        print(f"Published {sent} custom metrics to Amazon CloudWatch (namespace '{CLOUDWATCH_NAMESPACE}').")
+    except ImportError:
+        print("\nWARNING: boto3 is not installed, so CloudWatch was skipped. Run: pip install boto3")
+    except Exception as e:  # botocore errors: missing credentials, no permission, no network
+        print(f"\nWARNING: could not publish to CloudWatch ({type(e).__name__}: {e}).")
+        print("Check your AWS credentials/profile and region (see cloudwatch-setup.md).")
 
 
 if __name__ == "__main__":

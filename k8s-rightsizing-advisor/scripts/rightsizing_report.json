@@ -1,95 +1,95 @@
 {
-  "generated_at": "2026-09-21T04:41:57.098235+00:00",
+  "generated_at": "2026-10-23T05:04:28.834548+00:00",
   "namespace": "rightsizing-demo",
-  "total_wasted_monthly_usd": 40.69,
+  "total_wasted_monthly_usd": 37.16,
   "rows": [
     {
-      "pod": "app-1-667fbfb69f-wbn66",
+      "pod": "app-1-b766cd795-bncd9",
       "resource": "cpu",
       "requested": 500.0,
-      "p90_actual": 32.17,
-      "recommended": 38.61,
-      "waste_pct": 92.3,
+      "p90_actual": 57.5,
+      "recommended": 69.0,
+      "waste_pct": 86.2,
       "requested_cost_usd": 14.78,
-      "recommended_cost_usd": 1.14,
-      "wasted_cost_usd": 13.64
+      "recommended_cost_usd": 2.04,
+      "wasted_cost_usd": 12.74
     },
     {
-      "pod": "app-1-667fbfb69f-wbn66",
+      "pod": "app-1-b766cd795-bncd9",
       "resource": "memory",
       "requested": 256.0,
-      "p90_actual": 56.29,
-      "recommended": 67.55,
-      "waste_pct": 73.6,
+      "p90_actual": 59.08,
+      "recommended": 70.89,
+      "waste_pct": 72.3,
       "requested_cost_usd": 0.81,
-      "recommended_cost_usd": 0.21,
-      "wasted_cost_usd": 0.6
+      "recommended_cost_usd": 0.22,
+      "wasted_cost_usd": 0.59
     },
     {
-      "pod": "app-2-6dbcbfb4d4-z9cmx",
+      "pod": "app-2-84d79c75d4-vkbjl",
       "resource": "cpu",
       "requested": 400.0,
-      "p90_actual": 35.68,
-      "recommended": 42.81,
-      "waste_pct": 89.3,
+      "p90_actual": 66.21,
+      "recommended": 79.45,
+      "waste_pct": 80.1,
       "requested_cost_usd": 11.82,
-      "recommended_cost_usd": 1.27,
-      "wasted_cost_usd": 10.55
+      "recommended_cost_usd": 2.35,
+      "wasted_cost_usd": 9.47
     },
     {
-      "pod": "app-2-6dbcbfb4d4-z9cmx",
+      "pod": "app-2-84d79c75d4-vkbjl",
       "resource": "memory",
       "requested": 256.0,
-      "p90_actual": 86.35,
-      "recommended": 103.62,
+      "p90_actual": 86.34,
+      "recommended": 103.61,
       "waste_pct": 59.5,
       "requested_cost_usd": 0.81,
       "recommended_cost_usd": 0.33,
       "wasted_cost_usd": 0.48
     },
     {
-      "pod": "app-3-6f789bb659-rhdzr",
+      "pod": "app-3-5458df7fbc-nx4wl",
       "resource": "cpu",
       "requested": 300.0,
-      "p90_actual": 0.0,
-      "recommended": 0.0,
-      "waste_pct": 100.0,
+      "p90_actual": 20.45,
+      "recommended": 24.54,
+      "waste_pct": 91.8,
       "requested_cost_usd": 8.87,
-      "recommended_cost_usd": 0.0,
-      "wasted_cost_usd": 8.87
+      "recommended_cost_usd": 0.73,
+      "wasted_cost_usd": 8.14
     },
     {
-      "pod": "app-3-6f789bb659-rhdzr",
+      "pod": "app-3-5458df7fbc-nx4wl",
       "resource": "memory",
       "requested": 128.0,
-      "p90_actual": 30.06,
-      "recommended": 36.07,
-      "waste_pct": 71.8,
+      "p90_actual": 31.25,
+      "recommended": 37.5,
+      "waste_pct": 70.7,
       "requested_cost_usd": 0.41,
-      "recommended_cost_usd": 0.11,
-      "wasted_cost_usd": 0.3
+      "recommended_cost_usd": 0.12,
+      "wasted_cost_usd": 0.29
     },
     {
-      "pod": "app-4-68f8799c77-p5zfc",
+      "pod": "app-4-6997d585b9-567fj",
       "resource": "cpu",
       "requested": 250.0,
-      "p90_actual": 31.91,
-      "recommended": 38.3,
-      "waste_pct": 84.7,
+      "p90_actual": 55.04,
+      "recommended": 66.05,
+      "waste_pct": 73.6,
       "requested_cost_usd": 7.39,
-      "recommended_cost_usd": 1.13,
-      "wasted_cost_usd": 6.26
+      "recommended_cost_usd": 1.95,
+      "wasted_cost_usd": 5.44
     },
     {
-      "pod": "app-4-68f8799c77-p5zfc",
+      "pod": "app-4-6997d585b9-567fj",
       "resource": "memory",
       "requested": 128.0,
-      "p90_actual": 110.54,
-      "recommended": 132.65,
-      "waste_pct": -3.6,
+      "p90_actual": 106.38,
+      "recommended": 127.66,
+      "waste_pct": 0.3,
       "requested_cost_usd": 0.41,
-      "recommended_cost_usd": 0.42,
-      "wasted_cost_usd": -0.01
+      "recommended_cost_usd": 0.4,
+      "wasted_cost_usd": 0.01
     }
   ]
 }
